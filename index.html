@@ -3,77 +3,77 @@
 <head>
   <title>D3.js Tree Example</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
-  <style>
-    .node {
-      cursor: pointer;
-    }
-  </style>
 </head>
 <body>
-  <svg id="tree" width="1200" height="800"></svg>
+  <div id="tree-container"></div>
 
   <script>
-    // Sample data with 5 parent nodes, each having 5 children, and each child having 5 grandchild nodes
-    const data = {
-      name: "Parent",
-      children: Array.from({ length: 5 }, (_, i) => ({
-        name: `Child ${i + 1}`,
-        children: Array.from({ length: 5 }, (_, j) => ({
-          name: `Grandchild ${i + 1}.${j + 1}`,
-          website: "", // Each grandchild node starts with an empty website
-        })),
-      })),
+    // Tree data with parent and child relationships
+    const treeData = {
+      name: 'Parent',
+      children: [
+        {
+          name: 'Child 1',
+          children: [
+            { name: 'A', link: 'https://example.com/A' },
+            { name: 'B', link: 'https://example.com/B' },
+            { name: 'C', link: 'https://example.com/C' },
+            { name: 'D', link: 'https://example.com/D' },
+            { name: 'E', link: 'https://example.com/E' },
+            { name: 'F', link: 'https://example.com/F' }
+          ]
+        },
+        {
+          name: 'Child 2',
+          children: [
+            { name: 'G', link: 'https://example.com/G' },
+            { name: 'H', link: 'https://example.com/H' },
+            { name: 'I', link: 'https://example.com/I' },
+            { name: 'J', link: 'https://example.com/J' },
+            { name: 'K', link: 'https://example.com/K' },
+            { name: 'L', link: 'https://example.com/L' }
+          ]
+        },
+        {
+          name: 'Child 3',
+          children: [
+            { name: 'M', link: 'https://example.com/M' },
+            { name: 'N', link: 'https://example.com/N' },
+            { name: 'O', link: 'https://example.com/O' },
+            { name: 'P', link: 'https://example.com/P' },
+            { name: 'Q', link: 'https://example.com/Q' }
+          ]
+        },
+        {
+          name: 'Child 4',
+          children: [
+            { name: 'R', link: 'https://example.com/R' },
+            { name: 'S', link: 'https://example.com/S' },
+            { name: 'T', link: 'https://example.com/T' },
+            { name: 'U', link: 'https://example.com/U' },
+            { name: 'V', link: 'https://example.com/V' }
+          ]
+        }
+      ]
     };
 
-    // Set up the tree layout
-    const treeLayout = d3.tree().size([800, 1000]);
+    // Create the tree layout
+    const width = 600;
+    const height = 400;
 
-    // Create a hierarchical layout from the data
-    const root = d3.hierarchy(data);
+    const treeLayout = d3.tree().size([width, height]);
 
-    // Compute the positions for each node
-    treeLayout(root);
+    const svg = d3
+      .select('#tree-container')
+      .append('svg')
+      .attr('width', width)
+      .attr('height', height);
 
-    // Create an SVG container
-    const svg = d3.select("#tree");
+    const root = d3.hierarchy(treeData);
+    const tree = treeLayout(root);
 
-    // Create a group to hold the tree nodes
-    const g = svg.append("g").attr("transform", "translate(100,50)");
-
-    // Create links between parent and child nodes
-    const links = root.links();
-    g.selectAll("path")
-      .data(links)
-      .enter()
-      .append("path")
-      .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x))
-      .attr("stroke", "black")
-      .attr("fill", "none");
-
-    // Create the nodes
-    const nodes = root.descendants();
-    const node = g
-      .selectAll(".node")
-      .data(nodes)
-      .enter()
-      .append("g")
-      .attr("class", "node")
-      .attr("transform", d => `translate(${d.y},${d.x})`)
-      .call(d3.drag().on("drag", dragged));
-
-    // Add circles for the nodes
-    node.append("circle").attr("r", 5);
-
-    // Add text labels for the nodes
-    node
-      .append("text")
-      .attr("dy", 5)
-      .attr("x", d => (d.children ? -10 : 10))
-      .style("text-anchor", d => (d.children ? "end" : "start"))
-      .text(d => d.data.name);
-
-    // Function to toggle node children visibility on click
-    function toggle(d) {
+    // Toggle children on click
+    function toggleChildren(d) {
       if (d.children) {
         d._children = d.children;
         d.children = null;
@@ -84,12 +84,87 @@
       update(d);
     }
 
-    // Update the tree layout with the new data
     function update(source) {
-      treeLayout(root);
+      const nodes = tree(root).descendants();
+      const links = tree(root).links();
 
-      const nodes = root.descendants();
-      const links = root.links();
+      // Compute the new tree layout
+      const node = svg.selectAll('g.node').data(nodes, (d) => d.id || (d.id = ++i));
 
-      // Update the nodes
-      node.data(nodes, d => d.id).transition().duration(500).attr("transform", d => `translate
+      // Enter any new nodes at the parent's previous position
+      const nodeEnter = node
+        .enter()
+        .append('g')
+        .attr('class', 'node')
+        .attr('transform', (d) => `translate(${source.y0},${source.x0})`)
+        .on('click', toggleChildren);
+
+      nodeEnter
+        .append('circle')
+        .attr('r', 1e-6)
+        .style('fill', (d) => (d._children ? 'lightsteelblue' : '#fff'));
+
+      nodeEnter
+        .append('text')
+        .attr('dy', '.35em')
+        .attr('x', (d) => (d.children || d._children ? -13 : 13))
+        .attr('text-anchor', (d) => (d.children || d._children ? 'end' : 'start'))
+        .text((d) => d.data.name);
+
+      // Transition nodes to their new position
+      const nodeUpdate = node
+        .merge(nodeEnter)
+        .transition()
+        .duration(duration)
+        .attr('transform', (d) => `translate(${d.y},${d.x})`);
+
+      nodeUpdate.select('circle').attr('r', 10).style('fill', (d) => (d._children ? 'lightsteelblue' : '#fff'));
+
+      // Transition exiting nodes to the parent's new position
+      const nodeExit = node
+        .exit()
+        .transition()
+        .duration(duration)
+        .attr('transform', (d) => `translate(${source.y},${source.x})`)
+        .remove();
+
+      nodeExit.select('circle').attr('r', 1e-6);
+      nodeExit.select('text').style('fill-opacity', 1e-6);
+
+      // Update the links
+      const link = svg.selectAll('path.link').data(links, (d) => d.target.id);
+
+      // Enter any new links at the parent's previous position
+      link.enter().insert('path', 'g').attr('class', 'link').attr('d', (d) => {
+        const o = { x: source.x0, y: source.y0 };
+        return diagonal({ source: o, target: o });
+      });
+
+      // Transition links to their new position
+      link.merge(link).transition().duration(duration).attr('d', diagonal);
+
+      // Transition exiting nodes to the parent's new position
+      link.exit().transition().duration(duration).attr('d', (d) => {
+        const o = { x: source.x, y: source.y };
+        return diagonal({ source: o, target: o });
+      });
+
+      // Stash the old positions for transition
+      nodes.forEach((d) => {
+        d.x0 = d.x;
+        d.y0 = d.y;
+      });
+    }
+
+    const duration = 750;
+    let i = 0;
+
+    const diagonal = d3.linkHorizontal().x((d) => d.y).y((d) => d.x);
+
+    root.x0 = height / 2;
+    root.y0 = 0;
+
+    update(root);
+  </script>
+</body>
+</html>
