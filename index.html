@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>D3.js Tree Example</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    .node {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <svg id="tree" width="800" height="600"></svg>
+
+  <script>
+    // Sample data with 5 parent nodes, each having 5 children, and each child having 5 grandchild nodes
+    const data = {
+      name: "Parent",
+      children: Array.from({ length: 5 }, (_, i) => ({
+        name: `Child ${i + 1}`,
+        children: Array.from({ length: 5 }, (_, j) => ({
+          name: `Grandchild ${i + 1}.${j + 1}`,
+          website: "", // Each grandchild node starts with an empty website
+        })),
+      })),
+    };
+
+    // Set up the tree layout
+    const treeLayout = d3.tree().size([600, 400]);
+
+    // Create a hierarchical layout from the data
+    const root = d3.hierarchy(data);
+
+    // Compute the positions for each node
+    treeLayout(root);
+
+    // Create an SVG container
+    const svg = d3.select("#tree");
+
+    // Create a group to hold the tree nodes
+    const g = svg.append("g").attr("transform", "translate(100,50)");
+
+    // Create links between parent and child nodes
+    const links = root.links();
+    g.selectAll("path")
+      .data(links)
+      .enter()
+      .append("path")
+      .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x))
+      .attr("stroke", "black")
+      .attr("fill", "none");
+
+    // Create the nodes
+    const nodes = root.descendants();
+    const node = g
+      .selectAll(".node")
+      .data(nodes)
+      .enter()
+      .append("g")
+      .attr("class", "node")
+      .attr("transform", d => `translate(${d.y},${d.x})`)
+      .call(d3.drag().on("drag", dragged));
+
+    // Add circles for the nodes
+    node.append("circle").attr("r", 5);
+
+    // Add text labels for the nodes
+    node
+      .append("text")
+      .attr("dy", 5)
+      .attr("x", d => (d.children ? -10 : 10))
+      .style("text-anchor", d => (d.children ? "end" : "start"))
+      .text(d => d.data.name);
+
+    // Function to toggle node children visibility on click
+    function toggle(d) {
+      if (d.children) {
+        d._children = d.children;
+        d.children = null;
+      } else {
+        d.children = d._children;
+        d._children = null;
+      }
+      update(d);
+    }
+
+    // Update the tree layout with the new data
+    function update(source) {
+      treeLayout(root);
+
+      const nodes = root.descendants();
+      const links = root.links();
+
+      // Update the nodes
+      node.data(nodes, d => d.id).transition().duration(500).attr("transform", d => `translate(${d.y},${d.x})`);
+
+      // Update the links
+      g.selectAll("path")
+        .data(links, d => d.target.id)
+        .transition()
+        .duration(500)
+        .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x));
+    }
+
+    // Function to handle drag behavior for the nodes
+    function dragged(event, d) {
+      d.x += event.dy;
+      d.y += event.dx;
+      update(d);
+    }
+
+    // Add click event listener to nodes for interactivity
+    node.on("click", toggle);
+
+    // Add the dummy href tag for the grandchild nodes (representing websites)
+    node.filter(d => d.depth === 2) // Select only the grandchild nodes
+      .append("a")
+      .attr("xlink:href", d => d.data.website) // Use d.data.website as the href value
+      .attr("target", "_blank") // Open the link in a new tab
+      .append("text")
+      .attr("dy", 15) // Adjust the position of the text relative to the circle
+      .style("text-anchor", "middle")
+      .text(d => "Website");
+
+    // Initial render
+    update(root);
+  </script>
+</body>
+</html>
