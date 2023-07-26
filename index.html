@@ -10,7 +10,7 @@
   </style>
 </head>
 <body>
-  <svg id="tree" width="800" height="600"></svg>
+  <svg id="tree" width="1200" height="800"></svg>
 
   <script>
     // Sample data with 5 parent nodes, each having 5 children, and each child having 5 grandchild nodes
@@ -26,7 +26,7 @@
     };
 
     // Set up the tree layout
-    const treeLayout = d3.tree().size([600, 400]);
+    const treeLayout = d3.tree().size([800, 1000]);
 
     // Create a hierarchical layout from the data
     const root = d3.hierarchy(data);
@@ -92,38 +92,4 @@
       const links = root.links();
 
       // Update the nodes
-      node.data(nodes, d => d.id).transition().duration(500).attr("transform", d => `translate(${d.y},${d.x})`);
-
-      // Update the links
-      g.selectAll("path")
-        .data(links, d => d.target.id)
-        .transition()
-        .duration(500)
-        .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x));
-    }
-
-    // Function to handle drag behavior for the nodes
-    function dragged(event, d) {
-      d.x += event.dy;
-      d.y += event.dx;
-      update(d);
-    }
-
-    // Add click event listener to nodes for interactivity
-    node.on("click", toggle);
-
-    // Add the dummy href tag for the grandchild nodes (representing websites)
-    node.filter(d => d.depth === 2) // Select only the grandchild nodes
-      .append("a")
-      .attr("xlink:href", d => d.data.website) // Use d.data.website as the href value
-      .attr("target", "_blank") // Open the link in a new tab
-      .append("text")
-      .attr("dy", 15) // Adjust the position of the text relative to the circle
-      .style("text-anchor", "middle")
-      .text(d => "Website");
-
-    // Initial render
-    update(root);
-  </script>
-</body>
-</html>
+      node.data(nodes, d => d.id).transition().duration(500).attr("transform", d => `translate
