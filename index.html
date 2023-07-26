@@ -2,78 +2,142 @@
 <html>
 <head>
   <title>D3.js Tree Example</title>
-  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    #container {
+      margin-bottom: 30px;
+    }
+
+    /* Marked with pink color */
+    .marked {
+      fill: black;
+    }
+
+    /* Remove arrowhead and make lines white */
+    .link {
+      fill: none;
+      stroke: black; /* Set the lines' color to white */
+      stroke-width: 1.5px;
+      marker-end: none; /* Remove the arrowhead */
+    }
+
+    /* Make nodes with small blue circles */
+    .node circle {
+      r: 3; /* Set the radius to make the circles smaller */
+      fill: steelblue; /* Set the fill color to blue */
+    }
+  </style>
 </head>
 <body>
-  <div id="tree-container"></div>
+  <svg id="tree" width="1500" height="3000"></svg>
 
   <script>
-    // Tree data with parent and child relationships
-    const treeData = {
-      name: 'Parent',
+    const data = {
+      name: "Parent",
       children: [
         {
-          name: 'Child 1',
+          name: "Child 1",
           children: [
-            { name: 'A', link: 'https://example.com/A' },
-            { name: 'B', link: 'https://example.com/B' },
-            { name: 'C', link: 'https://example.com/C' },
-            { name: 'D', link: 'https://example.com/D' },
-            { name: 'E', link: 'https://example.com/E' },
-            { name: 'F', link: 'https://example.com/F' }
-          ]
+            { name: "Apple", link: "https://apple.com" },
+            { name: "Bing", link: "https://bing.com/" },
+            { name: "commuvault", link: "https://commuvault.com/C" },
+            { name: "Dog", link: "https://dimple.com/D" },
+            { name: "Ear", link: "https://ear.com/E" },
+            { name: "F", link: "https://facebook.com/F" },
+          ],
         },
         {
-          name: 'Child 2',
+          name: "Child 2",
           children: [
-            { name: 'G', link: 'https://example.com/G' },
-            { name: 'H', link: 'https://example.com/H' },
-            { name: 'I', link: 'https://example.com/I' },
-            { name: 'J', link: 'https://example.com/J' },
-            { name: 'K', link: 'https://example.com/K' },
-            { name: 'L', link: 'https://example.com/L' }
-          ]
+            { name: "Google", link: "https://google.com" },
+            { name: "H", link: "https://example.com/H" },
+            { name: "I", link: "https://example.com/I" },
+            { name: "J", link: "https://example.com/J" },
+            { name: "K", link: "https://example.com/K" },
+            { name: "L", link: "https://example.com/L" },
+          ],
         },
         {
-          name: 'Child 3',
+          name: "Child 3",
           children: [
-            { name: 'M', link: 'https://example.com/M' },
-            { name: 'N', link: 'https://example.com/N' },
-            { name: 'O', link: 'https://example.com/O' },
-            { name: 'P', link: 'https://example.com/P' },
-            { name: 'Q', link: 'https://example.com/Q' }
-          ]
+            { name: "M", link: "https://example.com/M" },
+            { name: "N", link: "https://example.com/N" },
+            { name: "O", link: "https://example.com/O" },
+            { name: "P", link: "https://example.com/P" },
+            { name: "Q", link: "https://example.com/Q" },
+          ],
         },
         {
-          name: 'Child 4',
+          name: "Child 4",
           children: [
-            { name: 'R', link: 'https://example.com/R' },
-            { name: 'S', link: 'https://example.com/S' },
-            { name: 'T', link: 'https://example.com/T' },
-            { name: 'U', link: 'https://example.com/U' },
-            { name: 'V', link: 'https://example.com/V' }
-          ]
-        }
-      ]
+            { name: "R", link: "https://example.com/R" },
+            { name: "S", link: "https://example.com/S" },
+            { name: "T", link: "https://example.com/T" },
+            { name: "U", link: "https://example.com/U" },
+            { name: "V", link: "https://example.com/V" },
+          ],
+        },
+      ],
     };
 
-    // Create the tree layout
-    const width = 600;
-    const height = 400;
+    const svg = d3.select("#tree");
 
-    const treeLayout = d3.tree().size([width, height]);
+    const margin = { top: 40, right: 90, bottom: 50, left: 90 };
+    const width = +svg.attr("width") - margin.left - margin.right;
+    const height = +svg.attr("height") - margin.top - margin.bottom;
 
-    const svg = d3
-      .select('#tree-container')
-      .append('svg')
-      .attr('width', width)
-      .attr('height', height);
+    // Make g transform to 100,2100
+    const g = svg.append("g").attr("transform", `translate(100,2100)`);
 
-    const root = d3.hierarchy(treeData);
-    const tree = treeLayout(root);
+    const treeLayout = d3.tree().nodeSize([60, 100]);
 
-    // Toggle children on click
-    function toggleChildren(d) {
+    const root = d3.hierarchy(data);
+    const links = treeLayout(root).links();
+    const descendants = root.descendants();
+
+    const link = g
+      .selectAll(".link")
+      .data(links)
+      .enter()
+      .append("path")
+      .attr("class", "link")
+      .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x));
+
+    const node = g
+      .selectAll(".node")
+      .data(descendants)
+      .enter()
+      .append("g")
+      .attr("class", "node")
+      .attr("transform", d => `translate(${d.y},${d.x})`)
+      .on("click", handleClick);
+
+    node
+      .append("circle")
+      .attr("r", 5)
+      .style("fill", "steelblue");
+
+    // Wrap the text elements with <a> tags and set href attribute for links
+    node
+      .append("a") // Add <a> tag to wrap the text elements
+      .attr("href", d => d.data.link) // Set href attribute to the link URL
+      .attr("target", "_blank") // Open link in new tab
+      .append("text")
+      .attr("dy", "0.31em")
+      .attr("x", d => (d.children ? -6 : 6))
+      .attr("text-anchor", d => (d.children ? "end" : "start"))
+      .text(d => d.data.name)
+      .attr("class", "marked");
+
+    // Function to handle node click
+    function handleClick(d) {
       if (d.children) {
         d._children = d.children;
         d.children = null;
@@ -84,87 +148,67 @@
       update(d);
     }
 
+    // Function to update the tree on click
     function update(source) {
-      const nodes = tree(root).descendants();
-      const links = tree(root).links();
+      const treeData = treeLayout(root);
 
-      // Compute the new tree layout
-      const node = svg.selectAll('g.node').data(nodes, (d) => d.id || (d.id = ++i));
+      const nodes = treeData.descendants();
+      const links = treeData.links();
 
-      // Enter any new nodes at the parent's previous position
+      // Normalize for fixed-depth
+      nodes.forEach(d => (d.y = d.depth * 180));
+
+      const node = g.selectAll(".node").data(nodes, d => d.data.name);
+
+      node.exit().remove();
+
       const nodeEnter = node
         .enter()
-        .append('g')
-        .attr('class', 'node')
-        .attr('transform', (d) => `translate(${source.y0},${source.x0})`)
-        .on('click', toggleChildren);
+        .append("g")
+        .attr("class", "node")
+        .attr("transform", d => `translate(${source.y},${source.x})`)
+        .on("click", handleClick);
 
       nodeEnter
-        .append('circle')
-        .attr('r', 1e-6)
-        .style('fill', (d) => (d._children ? 'lightsteelblue' : '#fff'));
+        .append("circle")
+        .attr("r", 5)
+        .style("fill", "steelblue");
 
+      // Wrap the text elements with <a> tags and set href attribute for links
       nodeEnter
-        .append('text')
-        .attr('dy', '.35em')
-        .attr('x', (d) => (d.children || d._children ? -13 : 13))
-        .attr('text-anchor', (d) => (d.children || d._children ? 'end' : 'start'))
-        .text((d) => d.data.name);
+        .append("a") // Add <a> tag to wrap the text elements
+        .attr("href", d => d.data.link) // Set href attribute to the link URL
+        .attr("target", "_blank") // Open link in new tab
+        .append("text")
+        .attr("dy", "0.31em")
+        .attr("x", d => (d.children || d._children ? -6 : 6))
+        .attr("text-anchor", d => (d.children || d._children ? "end" : "start"))
+        .text(d => d.data.name)
+        .attr("class", "marked");
 
-      // Transition nodes to their new position
-      const nodeUpdate = node
-        .merge(nodeEnter)
+      const nodeUpdate = nodeEnter.merge(node);
+      nodeUpdate
         .transition()
-        .duration(duration)
-        .attr('transform', (d) => `translate(${d.y},${d.x})`);
+        .duration(750)
+        .attr("transform", d => `translate(${d.y},${d.x})`);
 
-      nodeUpdate.select('circle').attr('r', 10).style('fill', (d) => (d._children ? 'lightsteelblue' : '#fff'));
+      const link = g.selectAll(".link").data(links, d => d.target.data.name);
 
-      // Transition exiting nodes to the parent's new position
-      const nodeExit = node
-        .exit()
+      link.exit().remove();
+
+      link
+        .enter()
+        .insert("path", "g")
+        .attr("class", "link")
+        .attr("d", d3.linkHorizontal().x(d => source.y).y(d => source.x))
+        .merge(link)
         .transition()
-        .duration(duration)
-        .attr('transform', (d) => `translate(${source.y},${source.x})`)
-        .remove();
-
-      nodeExit.select('circle').attr('r', 1e-6);
-      nodeExit.select('text').style('fill-opacity', 1e-6);
-
-      // Update the links
-      const link = svg.selectAll('path.link').data(links, (d) => d.target.id);
-
-      // Enter any new links at the parent's previous position
-      link.enter().insert('path', 'g').attr('class', 'link').attr('d', (d) => {
-        const o = { x: source.x0, y: source.y0 };
-        return diagonal({ source: o, target: o });
-      });
-
-      // Transition links to their new position
-      link.merge(link).transition().duration(duration).attr('d', diagonal);
-
-      // Transition exiting nodes to the parent's new position
-      link.exit().transition().duration(duration).attr('d', (d) => {
-        const o = { x: source.x, y: source.y };
-        return diagonal({ source: o, target: o });
-      });
-
-      // Stash the old positions for transition
-      nodes.forEach((d) => {
-        d.x0 = d.x;
-        d.y0 = d.y;
-      });
+        .duration(750)
+        .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x));
     }
 
-    const duration = 750;
-    let i = 0;
-
-    const diagonal = d3.linkHorizontal().x((d) => d.y).y((d) => d.x);
-
-    root.x0 = height / 2;
-    root.y0 = 0;
-
-    update(root);
+    // Initialize the tree with all children collapsed
+    root.children.forEach(handleClick);
   </script>
 </body>
 </html>
