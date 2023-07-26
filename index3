@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+/*svg width =1500 , height =5000,
+G transform (300,4300)*/ 
+<html>
+<head>
+  <title>D3.js Tree Example</title>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    #container {
+      margin-bottom: 30px;
+    }
+
+    /* Marked with pink color */
+    .marked {
+      fill: black;
+    }
+
+    /* Remove arrowhead and make lines white */
+    .link {
+      fill: none;
+      stroke: #DDDDDD; /* Set the lines' color to #DDDDDD */
+      stroke-width: 1.5px;
+      marker-end: none; /* Remove the arrowhead */
+    }
+
+    /* Make nodes with small blue circles */
+    .node circle {
+      r: 3; /* Set the radius to make the circles smaller */
+      fill: steelblue; /* Set the fill color to blue */
+    }
+  </style>
+</head>
+<body>
+
+  <svg id="tree" width="1500" height="5000"></svg>
+
+  <script>
+  const data = {
+  name: "Parent",
+  children: [
+    {
+      name: "Child 1",
+      children: [
+        { name: "Grandchild 1.1", link: "https://example.com/1.1" },
+        { name: "Grandchild 1.2", link: "https://example.com/1.2" },
+        { name: "Grandchild 1.3", link: "https://example.com/1.3" },
+        { name: "Grandchild 1.4", link: "https://example.com/1.4" },
+        { name: "Grandchild 1.5", link: "https://example.com/1.5" },
+        { name: "Grandchild 1.6", link: "https://example.com/1.6" },
+        { name: "Grandchild 1.7", link: "https://example.com/1.7" },
+        { name: "Grandchild 1.8", link: "https://example.com/1.8" },
+      ],
+    },
+    {
+      name: "Child 2",
+      children: [
+        { name: "Grandchild 2.1", link: "https://example.com/2.1" },
+        { name: "Grandchild 2.2", link: "https://example.com/2.2" },
+        { name: "Grandchild 2.3", link: "https://example.com/2.3" },
+        { name: "Grandchild 2.4", link: "https://example.com/2.4" },
+        { name: "Grandchild 2.5", link: "https://example.com/2.5" },
+      ],
+    },
+    {
+      name: "Child 3",
+      children: [
+        { name: "Grandchild 3.1", link: "https://example.com/3.1" },
+        { name: "Grandchild 3.2", link: "https://example.com/3.2" },
+      ],
+    },
+    {
+      name: "Child 4",
+      children: [
+        {
+          name: "4.1 Family A",
+          children: [
+            { name: "Great Grandchild 4.1.1", link: "https://example.com/4.1.1" },
+            { name: "great Grandchild 4.1.2", link: "https://example.com/4.1.2" },
+            { name: "Great Grandchild 4.1.3", link: "https://example.com/4.1.3" },
+          ],
+        },
+        {
+          name: "4.2 Family B",
+          children: [
+            { name: "Great Grandchild 4.2.1", link: "https://example.com/4.2.1" },
+            { name: "Great Grandchild 4.2.2", link: "https://example.com/4.2.2" },
+            { name: "Great Grandchild 4.2.3", link: "https://example.com/4.2.3" },
+          ],
+        },
+      ],
+    },
+    {
+      name: "Child 5",
+      children: [
+        { name: "Grandchild 5.1", link: "https://example.com/5.1" },
+      ],
+    },
+    {
+      name: "Child 6",
+      children: [
+        { name: "Grandchild 6.1", link: "https://example.com/6.1" },
+        { name: "Grandchild 6.2", link: "https://example.com/6.2" },
+      ],
+    },
+    {
+      name: "Child 7",
+      children: [
+        { name: "Grandchild 7.1", link: "https://example.com/7.1" },
+      ],
+    },
+  ],
+};
+
+    const svg = d3.select("#tree");
+
+    const margin = { top: 40, right: 90, bottom: 50, left: 90 };
+    const width = +svg.attr("width") - margin.left - margin.right;
+    const height = +svg.attr("height") - margin.top - margin.bottom;
+
+    // Make g transform to 300,4300
+    const g = svg.append("g").attr("transform", `translate(300,4300)`);
+
+    const treeLayout = d3.tree().nodeSize([60, 100]);
+
+    const root = d3.hierarchy(data);
+    const links = treeLayout(root).links();
+    const descendants = root.descendants();
+
+    const link = g
+      .selectAll(".link")
+      .data(links)
+      .enter()
+      .append("path")
+      .attr("class", "link")
+      .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x));
+
+    const node = g
+      .selectAll(".node")
+      .data(descendants)
+      .enter()
+      .append("g")
+      .attr("class", "node")
+      .attr("transform", d => `translate(${d.y},${d.x})`)
+      .on("click", handleClick);
+
+    node
+      .append("circle")
+      .attr("r", 5)
+      .style("fill", "steelblue");
+
+    // Wrap the text elements with <a> tags and set href attribute for links
+    node
+      .append("a") // Add <a> tag to wrap the text elements
+      .attr("href", d => d.data.link) // Set href attribute to the link URL
+      .attr("target", "_blank") // Open link in new tab
+      .append("text")
+      .attr("dy", "0.31em")
+      .attr("x", d => (d.children ? -6 : 6))
+      .attr("text-anchor", d => (d.children ? "end" : "start"))
+      .text(d => d.data.name)
+      .attr("class", "marked");
+
+    // Function to handle node click
+    function handleClick(d) {
+      if (d.children) {
+        d._children = d.children;
+        d.children = null;
+      } else {
+        d.children = d._children;
+        d._children = null;
+      }
+      update(d);
+    }
+
+    // Function to update the tree on click
+    function update(source) {
+      const treeData = treeLayout(root);
+
+      const nodes = treeData.descendants();
+      const links = treeData.links();
+
+      // Normalize for fixed-depth
+      nodes.forEach(d => (d.y = d.depth * 180));
+
+      const node = g.selectAll(".node").data(nodes, d => d.data.name);
+
+      node.exit().remove();
+
+      const nodeEnter = node
+        .enter()
+        .append("g")
+        .attr("class", "node")
+        .attr("transform", d => `translate(${source.y},${source.x})`)
+        .on("click", handleClick);
+
+      nodeEnter
+        .append("circle")
+        .attr("r", 5)
+        .style("fill", "steelblue");
+
+      // Wrap the text elements with <a> tags and set href attribute for links
+      nodeEnter
+        .append("a") // Add <a> tag to wrap the text elements
+        .attr("href", d => d.data.link) // Set href attribute to the link URL
+        .attr("target", "_blank") // Open link in new tab
+        .append("text")
+        .attr("dy", "0.31em")
+        .attr("x", d => (d.children || d._children ? -6 : 6))
+        .attr("text-anchor", d => (d.children || d._children ? "end" : "start"))
+        .text(d => d.data.name)
+        .attr("class", "marked");
+
+      const nodeUpdate = nodeEnter.merge(node);
+      nodeUpdate
+        .transition()
+        .duration(750)
+        .attr("transform", d => `translate(${d.y},${d.x})`);
+
+      const link = g.selectAll(".link").data(links, d => d.target.data.name);
+
+      link.exit().remove();
+
+      link
+        .enter()
+        .insert("path", "g")
+        .attr("class", "link")
+        .attr("d", d3.linkHorizontal().x(d => source.y).y(d => source.x))
+        .merge(link)
+        .transition()
+        .duration(750)
+        .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x));
+    }
+
+    // Initialize the tree with all children collapsed
+    root.children.forEach(handleClick);
+  </script>
+</body>
+</html>
